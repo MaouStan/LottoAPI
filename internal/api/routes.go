@@ -8,7 +8,7 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	auth := r.Group("/lotto")
+	auth := r.Group("/")
 	// auth.Use(middleware.AuthMiddleware())
 	{
 		auth.GET("/", handlers.Hello)

@@ -1,4 +1,4 @@
-version: '3'
+version: '3.1'
 
 services:
   api:
@@ -22,6 +22,20 @@ services:
       - POSTGRES_DB=${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  cloudflare-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel
+    hostname: cloudflare-tunnel
+    restart: unless-stopped
+    network_mode: "host"
+    command: tunnel run lotto-api
+    volumes:
+      - ./config.yml:/etc/cloudflared/config.yml
+    environment:
+      - "TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
 volumes:
   postgres_data:
