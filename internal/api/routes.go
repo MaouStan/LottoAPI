@@ -2,7 +2,7 @@ package api
 
 import (
 	"lottery-api/internal/api/handlers"
-	// "lottery-api/internal/api/middleware"
+	"lottery-api/internal/api/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +15,7 @@ func SetupRoutes(router *gin.Engine) {
 
 	// Middleware for authentication
 	authRoutes := router.Group("/")
-	// authRoutes.Use(middleware.Auth())
+	authRoutes.Use(middleware.Auth())
 
 	// Authenticated routes
 	authRoutes.GET("/lottery", handlers.GetLotteryNumbers)
