@@ -1,19 +1,26 @@
 package api
 
 import (
+	"lottery-api/internal/api/handlers"
+	// "lottery-api/internal/api/middleware"
+
 	"github.com/gin-gonic/gin"
-	"github.com/maoustan/lotto-api/internal/api/handlers"
 )
 
-func SetupRouter() *gin.Engine {
-	r := gin.Default()
+func SetupRoutes(router *gin.Engine) {
+	// Public routes
+	router.GET("/", handlers.Hello)
+	router.POST("/register", handlers.Register)
+	router.POST("/login", handlers.Login)
 
-	auth := r.Group("/")
-	// auth.Use(middleware.AuthMiddleware())
-	{
-		auth.GET("/", handlers.Hello)
-		// เพิ่ม routes อื่นๆ ตามต้องการ
-	}
+	// Middleware for authentication
+	authRoutes := router.Group("/")
+	// authRoutes.Use(middleware.Auth())
 
-	return r
+	// Authenticated routes
+	authRoutes.GET("/lottery", handlers.GetLotteryNumbers)
+	authRoutes.POST("/purchase", handlers.PurchaseLottery)
+	authRoutes.POST("/transfer", handlers.TransferLottery)
+	authRoutes.GET("/wallet", handlers.GetWalletBalance)
+	authRoutes.GET("/draw", handlers.GetDrawResults)
 }
