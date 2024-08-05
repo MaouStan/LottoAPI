@@ -1,12 +1,12 @@
 -- Drop existing tables if they exist
--- DROP TABLE IF EXISTS lottery_results CASCADE;
--- DROP TABLE IF EXISTS transfers CASCADE;
--- DROP TABLE IF EXISTS purchases CASCADE;
--- DROP TABLE IF EXISTS draw_numbers CASCADE;
--- DROP TABLE IF EXISTS members CASCADE;
--- DROP TABLE IF EXISTS general_users CASCADE;
--- DROP TABLE IF EXISTS admins CASCADE;
--- DROP SEQUENCE IF EXISTS lottery_number_seq;
+DROP TABLE IF EXISTS lottery_results CASCADE;
+DROP TABLE IF EXISTS transfers CASCADE;
+DROP TABLE IF EXISTS purchases CASCADE;
+DROP TABLE IF EXISTS draw_numbers CASCADE;
+DROP TABLE IF EXISTS members CASCADE;
+DROP TABLE IF EXISTS general_users CASCADE;
+DROP TABLE IF EXISTS admins CASCADE;
+DROP SEQUENCE IF EXISTS lottery_number_seq;
 
 -- Create tables
 -- Table to store general users
