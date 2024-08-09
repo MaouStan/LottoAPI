@@ -10,6 +10,7 @@ var (
 	DBName     string
 	DBHost     string
 	DBPort     string
+	JWT_SECRET string
 )
 
 func Load() {
@@ -18,6 +19,7 @@ func Load() {
 	DBName = getEnv("DB_NAME", "")
 	DBHost = getEnv("DB_HOST", "")
 	DBPort = getEnv("DB_PORT", "5432")
+	JWT_SECRET = getEnv("JWT_SECRET", "")
 }
 
 func GetDSN() string {

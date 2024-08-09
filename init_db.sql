@@ -1,103 +1,83 @@
--- Create the database
-CREATE DATABASE IF NOT EXISTS lottery;
+-- Drop Tables if They Exist (for Resetting the Database)
+DROP TABLE IF EXISTS prizes CASCADE;
+DROP TABLE IF EXISTS draws CASCADE;
+DROP TABLE IF EXISTS transactions CASCADE;
+DROP TABLE IF EXISTS lotto_numbers CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
--- Use the database
-USE lottery;
+-- Drop ENUM Types if They Exist (for Resetting the Database)
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        DROP TYPE user_role;
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transaction_type') THEN
+        DROP TYPE transaction_type;
+    END IF;
+END $$;
 
--- Table to store general users
-CREATE TABLE IF NOT EXISTS general_users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
+-- Create ENUM Type for User Roles
+CREATE TYPE user_role AS ENUM ('member', 'admin');
+
+-- Create ENUM Type for Transaction Types
+CREATE TYPE transaction_type AS ENUM ('purchase', 'claim_winnings');
+
+-- Create Users Table
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    is_member BOOLEAN DEFAULT FALSE
+    role user_role DEFAULT 'member',
+    wallet_balance INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table to store members (inherits general user properties)
-CREATE TABLE IF NOT EXISTS members (
-    member_id INT PRIMARY KEY,
-    wallet_balance DECIMAL(10, 2) DEFAULT 0.00,
-    FOREIGN KEY (member_id) REFERENCES general_users(user_id)
+-- Create Lotto Numbers Table
+CREATE TABLE IF NOT EXISTS lotto_numbers (
+    id SERIAL PRIMARY KEY,
+    number VARCHAR(6) UNIQUE NOT NULL,
+    is_sold BOOLEAN DEFAULT FALSE,
+    sold_to INT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table to store lottery numbers
-CREATE TABLE IF NOT EXISTS lottery_numbers (
-    number_id INT AUTO_INCREMENT PRIMARY KEY,
-    number_value CHAR(6) UNIQUE NOT NULL
+-- Create Transactions Table
+CREATE TABLE IF NOT EXISTS transactions (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    lotto_number_id INT REFERENCES lotto_numbers(id) ON DELETE CASCADE,
+    transaction_type transaction_type NOT NULL,
+    amount INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table to manage available lottery numbers for each draw
-CREATE TABLE IF NOT EXISTS draw_numbers (
-    draw_id INT,
-    number_id INT,
-    available BOOLEAN DEFAULT TRUE,
-    PRIMARY KEY (draw_id, number_id),
-    FOREIGN KEY (number_id) REFERENCES lottery_numbers(number_id)
+-- Create Draws Table
+CREATE TABLE IF NOT EXISTS draws (
+    id SERIAL PRIMARY KEY,
+    draw_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    winning_numbers VARCHAR(6)[]
 );
 
--- Table to store member purchases
-CREATE TABLE IF NOT EXISTS purchases (
-    purchase_id INT AUTO_INCREMENT PRIMARY KEY,
-    member_id INT,
-    number_id INT,
-    purchase_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (member_id) REFERENCES members(member_id),
-    FOREIGN KEY (number_id) REFERENCES lottery_numbers(number_id)
+-- Create Prizes Table
+CREATE TABLE IF NOT EXISTS prizes (
+    id SERIAL PRIMARY KEY,
+    draw_id INT REFERENCES draws(id) ON DELETE CASCADE,
+    lotto_number_id INT REFERENCES lotto_numbers(id),
+    prize_amount INTEGER NOT NULL,
+    claimed BOOLEAN DEFAULT FALSE
 );
 
--- Table to store transfers of lottery numbers
-CREATE TABLE IF NOT EXISTS transfers (
-    transfer_id INT AUTO_INCREMENT PRIMARY KEY,
-    from_member_id INT,
-    to_member_id INT,
-    number_id INT,
-    transfer_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    confirmed BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (from_member_id) REFERENCES members(member_id),
-    FOREIGN KEY (to_member_id) REFERENCES members(member_id),
-    FOREIGN KEY (number_id) REFERENCES lottery_numbers(number_id)
-);
+-- Insert Admin User
+INSERT INTO users (username, password_hash, role, wallet_balance)
+VALUES ('goblin123', '$2b$10$IKO4jTzz2NxYFHE3bVfBveBuv7wDTUsY.57C2jt5VE02WIN99YT9a', 'admin', 0);
 
--- Table to store lottery draw results
-CREATE TABLE IF NOT EXISTS lottery_results (
-    draw_id INT AUTO_INCREMENT PRIMARY KEY,
-    draw_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    number_1 CHAR(6),
-    number_2 CHAR(6),
-    number_3 CHAR(6),
-    number_4 CHAR(6),
-    number_5 CHAR(6),
-    FOREIGN KEY (number_1) REFERENCES lottery_numbers(number_id),
-    FOREIGN KEY (number_2) REFERENCES lottery_numbers(number_id),
-    FOREIGN KEY (number_3) REFERENCES lottery_numbers(number_id),
-    FOREIGN KEY (number_4) REFERENCES lottery_numbers(number_id),
-    FOREIGN KEY (number_5) REFERENCES lottery_numbers(number_id)
-);
-
--- Table to store system administrators
-CREATE TABLE IF NOT EXISTS admins (
-    admin_id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL
-);
-
--- Generate lottery numbers from 000000 to 999999
--- (This would normally be done with a script or program)
--- Example for MySQL, generating numbers using a stored procedure:
-
-DELIMITER //
-
-CREATE PROCEDURE generate_lottery_numbers()
+-- Insert 100 Random Lotto Numbers
+DO $$
+DECLARE
+    i INT;
+    random_number VARCHAR(6);
 BEGIN
-    DECLARE num CHAR(6);
-    SET num = '000000';
-    
-    WHILE num <= '999999' DO
-        INSERT IGNORE INTO lottery_numbers (number_value) VALUES (num);
-        SET num = LPAD(CAST(CAST(num AS UNSIGNED) + 1 AS CHAR), 6, '0');
-    END WHILE;
-END //
-
-DELIMITER ;
-
--- Call the procedure to generate numbers
-CALL generate_lottery_numbers();
+    FOR i IN 1..100 LOOP
+        random_number := LPAD(CAST(FLOOR(RANDOM() * 1000000) AS VARCHAR), 6, '0');
+        INSERT INTO lotto_numbers (number) VALUES (random_number);
+    END LOOP;
+END $$;

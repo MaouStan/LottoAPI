@@ -8,12 +8,12 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var DB *sql.DB
+var Conn *sql.DB
 
 func Connect() {
 	var err error
 	dsn := config.GetDSN()
-	DB, err = sql.Open("postgres", dsn)
+	Conn, err = sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}

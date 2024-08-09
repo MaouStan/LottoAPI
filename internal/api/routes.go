@@ -2,25 +2,40 @@ package api
 
 import (
 	"lottery-api/internal/api/handlers"
-	"lottery-api/internal/api/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRoutes(router *gin.Engine) {
-	// Public routes
+	// Hello World
 	router.GET("/", handlers.Hello)
-	router.POST("/register", handlers.Register)
-	router.POST("/login", handlers.Login)
 
-	// Middleware for authentication
-	authRoutes := router.Group("/")
-	authRoutes.Use(middleware.Auth())
+	// API routes
+	api := router.Group("/api")
+	{
+		// User Routes
+		userGroup := api.Group("/auth")
+		{
+			userGroup.POST("/register", handlers.SignUp) // User registration
+			userGroup.POST("/login", handlers.Login)     // User login
+		}
+		// Member Routes (requires authentication)
+		memberGroup := api.Group("/")
+		// memberGroup.Use(middleware.AuthMiddleware("member"))
+		{
+			memberGroup.GET("/lotto", handlers.ViewLottoNumbers)     // View  lotto numbers
+			memberGroup.POST("/purchase", handlers.PurchaseLotto)    // Purchase lotto number
+			memberGroup.GET("/balance", handlers.CheckWalletBalance) // Check wallet balance
+			memberGroup.GET("/results", handlers.CheckLottoResults)  // Check lotto results
+			memberGroup.POST("/claim", handlers.ClaimWinnings)       // Claim winnings
+		}
 
-	// Authenticated routes
-	authRoutes.GET("/lottery", handlers.GetLotteryNumbers)
-	authRoutes.POST("/purchase", handlers.PurchaseLottery)
-	authRoutes.POST("/transfer", handlers.TransferLottery)
-	authRoutes.GET("/wallet", handlers.GetWalletBalance)
-	authRoutes.GET("/draw", handlers.GetDrawResults)
+		// Admin Routes (requires authentication)
+		adminGroup := api.Group("/admin")
+		// adminGroup.Use(middleware.AuthMiddleware("admin"))
+		{
+			adminGroup.POST("/draw", handlers.DrawLottoNumbers) // Draw lotto numbers
+			adminGroup.POST("/reset", handlers.ResetSystem)     // Reset the system
+		}
+	}
 }
