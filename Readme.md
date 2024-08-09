@@ -1,12 +1,12 @@
 # How to use this workspace
 ## 0. Setup .env file
   ```bash
-    echo DB_HOST=localhost > .env
-    echo DB_USER=postgres >> .env
-    echo DB_PASSWORD=lotto2347 >> .env
-    echo DB_NAME=lottery_aem >> .env
-    echo DB_PORT=5432 >> .env
-    echo JWT_SECRET=maou@lotto2347 >> .env
+    echo DB_HOST= > .env
+    echo DB_USER= >> .env
+    echo DB_PASSWORD= >> .env
+    echo DB_NAME= >> .env
+    echo DB_PORT= >> .env
+    echo JWT_SECRET= >> .env
   ```
 
 
